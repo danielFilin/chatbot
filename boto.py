@@ -15,32 +15,53 @@ def index():
 
 @route("/chat", method='POST')
 def chat():
-    response = ""
-
     user_message = request.POST.get('msg')
     newone = user_message.split()
-    length = len(newone)
-    curse_words = "shit fuck"
-    greetings = ["hello", "good evening", "good morning", "hi"]
+    greetings = ["hello", "good", "evening", "good", "morning", "hi"]
+    direction_answer = ["go south", "it is over the street", "ask someone else", "keep walking for 900 km"]
+    conditional_words = {
+        "cursewords": ["shit", "fuck", "fucker"],
+        "greetings": ["hello", "good", "evening", "good", "morning", "hi"],
+        "directions": ["where", "find", "which", "direction", "far", "how"],
+        "funny": ["joke", "funny"],
+        "weather": ["weather", "temperature"]
+    }
 
-    def check_greeting(ans):
-        if greetings.count(ans) == 1:
-            return True
-        else:
-            return False
+    def check_weather(words):
+        for word in words:
+            print(word)
+            if word == "weather":
+                index = words.index("weather")
+                city = words[index + 2]
+                api = "http://api.openweathermap.org/data/2.5/weather?appid=98b6fe5dad456b6d8dd141fc5b6f892d&q="
+                url = api + city
+                json_weather = requests.get(url).json()
+                my_weather_data = json_weather["main"]["temp"]
+                return my_weather_data
+        return False
 
-    def check_curse(word):
-        print(word in curse_words)
-        if word in curse_words:
-            return True
-        else:
-            return False
+
+    def check_greeting(words):
+        for index, word in enumerate(words):
+            if greetings.count(word) == 1:
+                if word == "good":
+                    if greetings.count(words[index + 1]) == 1:
+                        return True
+                else:
+                    return True
+        return False
+
+    def random_joke():
+        url = "https://api.chucknorris.io/jokes/random"
+        json_joke = requests.get(url).json()
+        joke = json_joke["value"]
+        return joke
+
 
     def random_answer():
         response = requests.get("https://jsonplaceholder.typicode.com/todos")
         todos = json.loads(response.text)
         list_of_todos = []
-
         for todo in todos:
             if todo["title"]:
                 list_of_todos.extend([todo["title"]])
@@ -48,28 +69,38 @@ def chat():
         return response
 
 
-    print(greetings.count(user_message))
+    def check_all_cases(words, dictionary):
+        for key, items in dictionary.items():
+            for item in items:
+                for word in words:
+                    if word == item:
+                        if key == "cursewords":
+                            return "don't curse me", "crying"
+                        elif key == "greetings":
+                            check_greeting(words)
+                            return "good day to you!", "dancing"
+                        elif key == "directions":
+                            return (random.choice(direction_answer)), "giggling"
+                        elif key == "funny":
+                            return random_joke(), "laughing"
+                        elif key == "weather":
+                            return "the temperature there is now " + str(
+                                int((check_weather(newone) - 273.15))) + " degrees celsius", "takeoff"
+        if words[-1] == "?":
+            return "I don't know", "bored"
+        elif words[-1] == "!":
+            return "Please be quite! I want to sleep!", "no"
+        elif words[0] == "I":
+            return "Please, tell me more!", "excited"
+        else:
+            return random_answer(), "confused"
 
 
-    if check_curse(user_message):
-        response = "dont curse me"
-        reaction = "crying"
-    elif check_greeting(user_message):
-        response = "good day to you!"
-        reaction = "dancing"
-    elif user_message[-1] == "?":
-        response = "I cannot help you with that!"
-        reaction = "laughing"
-    elif user_message[-1] == "!":
-        response = "Please be quite, I want to sleep."
-        reaction = "waiting"
-    else:
-        response= random_answer()
-        print(response)
-        reaction = "confused"
 
-    #chat.setAnimation("ok");
-    return json.dumps({"animation": reaction, "msg": response})
+    answer = check_all_cases(newone, conditional_words)
+    print(answer[0], answer[1])
+
+    return json.dumps({"animation": answer[1], "msg": answer[0]})
 
 
 @route("/test", method='POST')
