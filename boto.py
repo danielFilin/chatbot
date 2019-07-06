@@ -15,7 +15,7 @@ def index():
 
 @route("/chat", method='POST')
 def chat():
-    user_message = request.POST.get('msg')
+    user_message = request.POST.get('msg').lower()
     newone = user_message.split()
     greetings = ["hello", "good", "evening", "good", "morning", "hi"]
     direction_answer = ["go south", "it is over the street", "ask someone else", "keep walking for 900 km"]
@@ -24,7 +24,9 @@ def chat():
         "greetings": ["hello", "good", "evening", "good", "morning", "hi"],
         "directions": ["where", "find", "which", "direction", "far", "how"],
         "funny": ["joke", "funny"],
-        "weather": ["weather", "temperature"]
+        "weather": ["weather", "temperature"],
+        "hate": ["hate", "dislike"],
+        "wait": ["soon", "later", "wait"]
     }
 
     def check_weather(words):
@@ -83,6 +85,10 @@ def chat():
                             return (random.choice(direction_answer)), "giggling"
                         elif key == "funny":
                             return random_joke(), "laughing"
+                        elif key == "hate":
+                            return "You are breaking my heart", "heartbroke"
+                        elif key == "waiting":
+                            return "Come on, don't delay it any more", "waiting"
                         elif key == "weather":
                             return "the temperature there is now " + str(
                                 int((check_weather(newone) - 273.15))) + " degrees celsius", "takeoff"
@@ -90,16 +96,14 @@ def chat():
             return "I don't know", "bored"
         elif words[-1] == "!":
             return "Please be quite! I want to sleep!", "no"
+        elif words[0] == "I" and words[1] == "love" and words[2] == "you":
+            return "A love you too!", "inlove"
         elif words[0] == "I":
             return "Please, tell me more!", "excited"
         else:
             return random_answer(), "confused"
 
-
-
     answer = check_all_cases(newone, conditional_words)
-    print(answer[0], answer[1])
-
     return json.dumps({"animation": answer[1], "msg": answer[0]})
 
 
